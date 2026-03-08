@@ -8,6 +8,9 @@ skip-lint = false
 [programs.localnet]
 solwill = "4bfagECyGUMHaaQF9mfTvJBpmyxTVFhzPNhb3xfTPMfF"
 
+[programs.devnet]
+solwill = "4bfagECyGUMHaaQF9mfTvJBpmyxTVFhzPNhb3xfTPMfF"
+
 [registry]
 url = "https://api.apr.dev"
 

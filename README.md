@@ -2,6 +2,21 @@
 
 A Solana smart contract that enables trustless crypto inheritance using a dead man's switch mechanism. Owners deposit SOL, designate beneficiaries with percentage shares, and check in periodically. If the owner stops checking in past a configurable timeout + grace period, beneficiaries can claim their designated share on-chain — no lawyers, custodians, or centralized services required.
 
+## Live Demo
+
+| | Link |
+|---|---|
+| **Frontend** | [https://solwill.pages.dev](https://solwill.pages.dev) |
+| **Program (Devnet)** | [`4bfagECyGUMHaaQF9mfTvJBpmyxTVFhzPNhb3xfTPMfF`](https://explorer.solana.com/address/4bfagECyGUMHaaQF9mfTvJBpmyxTVFhzPNhb3xfTPMfF?cluster=devnet) |
+| **Network** | Solana Devnet |
+
+### Try it out
+
+1. Visit [https://solwill.pages.dev](https://solwill.pages.dev)
+2. Switch your wallet (Phantom/Solflare) to **Devnet**
+3. Get devnet SOL from [sol-faucet.com](https://sol-faucet.com) or `solana airdrop 2`
+4. Connect wallet and create your first will
+
 ## How It Works
 
 1. **Owner creates a will** with a timeout period (e.g., 90 days) and grace period (e.g., 7 days)
@@ -47,19 +62,19 @@ A Solana smart contract that enables trustless crypto inheritance using a dead m
 └─────────────────────────────────────────────┘
 ```
 
-### Instructions (12 total)
+### Instructions (13 total)
 
 | Instruction | Caller | Description |
 |---|---|---|
 | `initialize` | Owner | Create a new will with timeout and grace period |
-| `deposit` | Owner | Deposit SOL into the vault (also acts as check-in) |
+| `deposit` | Owner | Deposit SOL into the vault |
 | `add_beneficiary` | Owner | Add a beneficiary with share in basis points |
 | `remove_beneficiary` | Owner | Remove a beneficiary from the will |
 | `update_beneficiary` | Owner | Update a beneficiary's share percentage |
 | `checkin` | Owner | Reset the dead man's switch timer |
 | `withdraw` | Owner | Withdraw SOL (only if not timed out) |
 | `update_timeout` | Owner | Update timeout and/or grace period |
-| `pause_will` | Owner | Pause the will (blocks deposits, withdrawals, claims) |
+| `pause_will` | Owner | Pause the will (blocks all operations) |
 | `unpause_will` | Owner | Unpause the will and reset timer |
 | `transfer_ownership` | Owner | Transfer will ownership to another address |
 | `close_will` | Owner | Close the will and reclaim all funds + rent |
@@ -120,6 +135,16 @@ Owner only:           initialize, deposit, add_beneficiary, remove_beneficiary,
 Listed beneficiary:   claim (only after timeout + grace period)
 ```
 
+## Tech Stack
+
+| Component | Technology |
+|---|---|
+| Smart Contract | Rust, Anchor v0.31.1 |
+| Frontend | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS v4, Framer Motion |
+| Wallet Integration | Solana Wallet Adapter |
+| Deployment | Cloudflare Pages (frontend), Solana Devnet (program) |
+
 ## Prerequisites
 
 - [Rust](https://rustup.rs/) (stable toolchain + solana toolchain)
@@ -143,6 +168,21 @@ anchor build
 
 # Run tests
 anchor test
+```
+
+## Frontend Development
+
+```bash
+cd app
+
+# Install frontend dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
 ## Configuration
@@ -181,8 +221,15 @@ solwill/
 │       ├── update_timeout.rs           # Update timeout/grace
 │       ├── pause_will.rs              # Pause/unpause
 │       └── transfer_ownership.rs       # Transfer ownership
+├── app/                                # Next.js frontend
+│   ├── src/
+│   │   ├── app/                        # Pages and layout
+│   │   ├── components/                 # UI components
+│   │   ├── hooks/                      # useSolWill hook
+│   │   └── utils/                      # Constants, IDL, types
+│   └── package.json
 ├── tests/
-│   └── solwill.ts                      # Integration tests (39 tests)
+│   └── solwill.ts                      # Integration tests (55 tests)
 ├── Anchor.toml
 ├── Cargo.toml
 └── package.json
@@ -198,7 +245,7 @@ anchor test
 anchor test -- --features "anchor-debug"
 ```
 
-### Test Coverage (39 tests)
+### Test Coverage (55 tests)
 
 - **Initialize** — Will creation with valid parameters
 - **Deposit** — SOL deposits, total tracking, zero amount rejection
@@ -207,12 +254,14 @@ anchor test -- --features "anchor-debug"
 - **Remove Beneficiary** — Removal, non-existent beneficiary
 - **Update Timeout** — Timeout/grace period updates, minimum validation
 - **Check In** — Timer reset verification
-- **Pause/Unpause** — State toggling, blocked operations while paused
-- **Withdraw** — SOL withdrawal, zero amount, insufficient balance, timed out
+- **Pause/Unpause** — State toggling, 10 blocked operations while paused (deposit, add/remove/update beneficiary, withdraw, checkin, update timeout, transfer ownership)
+- **Withdraw** — SOL withdrawal, zero amount, insufficient balance
 - **Claim** — Pre-timeout rejection, non-beneficiary rejection
-- **Transfer Ownership** — Same-address rejection
-- **Close Will** — Will closure with fund recovery, re-initialization
-- **Account State** — Full field verification
+- **Transfer Ownership** — Same-address rejection, zero address rejection
+- **Close Will** — Will closure with fund recovery, re-initialization, deposit-after-close rejection
+- **Authorization** — Non-owner rejection for all 7 owner-only operations
+- **Max Beneficiaries** — Adding 10 beneficiaries, 11th rejected
+- **Account State** — Full field verification, vault balance check
 
 ## Deployment
 
@@ -220,18 +269,15 @@ anchor test -- --features "anchor-debug"
 # Configure for devnet
 solana config set --url devnet
 
-# Generate a new keypair (if needed)
-solana-keygen new
-
 # Airdrop SOL for deployment
 solana airdrop 2
 
 # Build and deploy
 anchor build
-anchor deploy
+anchor deploy --provider.cluster devnet
 
 # Verify deployment
-solana program show <PROGRAM_ID>
+solana program show 4bfagECyGUMHaaQF9mfTvJBpmyxTVFhzPNhb3xfTPMfF --url devnet
 ```
 
 ## Security Considerations
@@ -241,7 +287,11 @@ solana program show <PROGRAM_ID>
 - **Double-claim prevention**: `has_claimed` flag per beneficiary
 - **Time-based access control**: Claims only after timeout + grace period
 - **Pause mechanism**: Owner can freeze operations in emergencies
+- **Pause-blocking**: All state-changing operations blocked when paused
+- **Overflow protection**: `saturating_add` used for cumulative counters
+- **Zero address validation**: Ownership cannot be transferred to zero address
 - **Rent-exempt protection**: Withdrawals and claims preserve minimum rent balance
+- **CPI with PDA signer**: Vault transfers use system program CPI with PDA seeds
 
 ## License
 

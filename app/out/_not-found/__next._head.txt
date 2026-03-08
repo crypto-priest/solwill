@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[36222,["/_next/static/chunks/d74460f8d180dbc1.js","/_next/static/chunks/6d899003a23c4c4a.js","/_next/static/chunks/b762d12766fd2957.js","/_next/static/chunks/4f0e74bcc247266a.js"],"ViewportBoundary"]
+3:I[36222,["/_next/static/chunks/d74460f8d180dbc1.js","/_next/static/chunks/6d899003a23c4c4a.js","/_next/static/chunks/b762d12766fd2957.js","/_next/static/chunks/4f0e74bcc247266a.js"],"MetadataBoundary"]
+4:"$Sreact.suspense"
+0:{"buildId":"g_0wgAg4S61a10q_bByBW","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"SolWill - Decentralized Crypto Inheritance on Solana"}],["$","meta","1",{"name":"description","content":"A trustless dead man's switch for crypto inheritance. Deposit SOL, designate beneficiaries, and secure your digital legacy on-chain."}]]}]}]}],null]}],"loading":null,"isPartial":false}
